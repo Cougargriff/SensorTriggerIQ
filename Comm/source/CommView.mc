@@ -32,8 +32,11 @@ class CommView extends Ui.View
             dc.drawText(dc.getWidth() / 2, 80,  Gfx.FONT_TINY,  "Connect a phone then", Gfx.TEXT_JUSTIFY_CENTER);
             dc.drawText(dc.getWidth() / 2, 100,  Gfx.FONT_TINY,  "use the phone to send", Gfx.TEXT_JUSTIFY_CENTER);
             dc.drawText(dc.getWidth() / 2, 120,  Gfx.FONT_TINY,  "your HR from the watch", Gfx.TEXT_JUSTIFY_CENTER);
+            
+            dc.drawText(dc.getWidth() / 2, 160,  Gfx.FONT_TINY,  "Heart Rate : " + HR, Gfx.TEXT_JUSTIFY_CENTER);
+            
         } 
-        else if(Sys.SCREEN_SHAPE_SEMI_ROUND == screenShape) 
+        else if(Sys.SCREEN_SHAPE_SEMI_ROUND == screenShape) // Other Screen Size Shit
         {
             dc.drawText(dc.getWidth() / 2, 20,  Gfx.FONT_MEDIUM, "Communications test", Gfx.TEXT_JUSTIFY_CENTER);
             dc.drawText(dc.getWidth() / 2, 50,  Gfx.FONT_SMALL,  "Connect a phone", Gfx.TEXT_JUSTIFY_CENTER);
