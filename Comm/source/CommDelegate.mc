@@ -19,6 +19,8 @@ class CommListener extends Comm.ConnectionListener
     function onComplete() 
     {
         Sys.println("Transmit Complete");
+        
+        HR_arr = [];
     }
 
     function onError() 

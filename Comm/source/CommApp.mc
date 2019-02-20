@@ -10,6 +10,9 @@ using Toybox.WatchUi as Ui;
 using Toybox.System as Sys;
 using Toybox.Sensor as sensor;
 
+using Toybox.SensorHistory;
+using Toybox.Lang;
+
 var page = 0;
 var strings = ["","","","",""];
 var stringsSize = 5;
@@ -17,6 +20,10 @@ var mailMethod;
 var phoneMethod;
 var crashOnMessage = false;
 var HR = -1;
+var HR_arr = [];
+
+var candoBG = false;
+var eventsTriggered = 0;
 
 var STATUS = "OFF";
 
@@ -27,25 +34,65 @@ class CommExample extends App.AppBase
     {
         App.AppBase.initialize();
         
-        sensor.setEnabledSensors([Sensor.SENSOR_HEARTRATE]);
-        sensor.enableSensorEvents(method(:onHR));
-  
+        
         if(Comm has :registerForPhoneAppMessages) 
         {
             Comm.registerForPhoneAppMessages(method(:onMsg));
         } 
         
+        sensor.setEnabledSensors([Sensor.SENSOR_HEARTRATE]);
+        sensor.enableSensorEvents(method(:onHR));
+        
+        if(Toybox.System has :ServiceDelegate)
+        {
+        	candoBG = true;
+        	Background.registerForTemporalEvent(new Time.Duration( (5 * 60) + 20));
+        }
+        else
+        {
+  			Sys.println("** no background");
+  		}
+        
+    }
+    
+    // Create a method to get the SensorHistoryIterator object
+	function getIterator(options) 
+	{
+	    return Toybox.SensorHistory.getHeartRateHistory(options);
+	}
+    
+    function getServiceDelegate()
+    {
+    	return [new TemporalHandler()];
     }
     
     function onMsg(msg)
     {
     	var s = msg.data.toString();
-    	STATUS = s;
     	
-    	var listener = new CommListener();
-    		
-			Comm.transmit(HR, null, listener);
-		
+    	if(s.find("ON") != null)
+    	{
+    		STATUS = "ON";
+    	}
+    	else if(s.find("OFF") != null)
+    	{
+    		STATUS = "OFF";
+    	}
+    	else if(s.find("test") != null)
+    	{
+    		test_history_send();
+    	}
+    	
+    	
+    	Ui.requestUpdate();
+    	
+    }
+    
+    function test_history_send()
+    {
+        var listener = new CommListener();
+		Comm.transmit(HR_arr, null, listener);
+
     }
     
     
@@ -53,6 +100,15 @@ class CommExample extends App.AppBase
     function onHR(sensorInfo)
     {
     	HR = sensorInfo.heartRate;
+    	//HR_arr.add(HR);
+    	Ui.requestUpdate();
+    }
+    
+    function onBackgroundData(data)
+    {
+    	eventsTriggered++;
+    	HR_arr.addAll(data);
+    	Ui.requestUpdate();
     }
 
     // onStart() is called on application start up
@@ -93,19 +149,5 @@ class CommExample extends App.AppBase
         Ui.requestUpdate();
     }
 
-    function onPhone(msg) 
-    {
-        var i;
-
-
-        for(i = (stringsSize - 1); i > 0; i -= 1) 
-        {
-            strings[i] = strings[i-1];
-        }
-        strings[0] = msg.data.toString();
-        page = 1;
-
-        Ui.requestUpdate();
-    }
-
+  
 }

@@ -1,5 +1,7 @@
 <resources>
     <bitmaps>
-        <bitmap id="id_monkey" filename="images/monkey.png" />
+        <bitmap id="id_monkey" filename="images/monkey.png" /><bitmap
+        	id="id_sensor" filename="images/sensor.png">
+</bitmap>
     </bitmaps>
 </resources>
