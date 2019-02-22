@@ -9,6 +9,7 @@ using Toybox.Communications as Comm;
 using Toybox.WatchUi as Ui;
 using Toybox.System as Sys;
 using Toybox.Sensor as sensor;
+using Toybox.Time;
 
 using Toybox.SensorHistory;
 using Toybox.Lang;
@@ -20,12 +21,13 @@ var mailMethod;
 var phoneMethod;
 var crashOnMessage = false;
 var HR = -1;
-var HR_arr = [];
+var HR_hash = {};
 
 var candoBG = false;
 var eventsTriggered = 0;
 
 var STATUS = "OFF";
+const FIVE_MINUTES = new Time.Duration(5 * 60);
 
 class CommExample extends App.AppBase 
 {
@@ -34,7 +36,6 @@ class CommExample extends App.AppBase
     {
         App.AppBase.initialize();
         
-        
         if(Comm has :registerForPhoneAppMessages) 
         {
             Comm.registerForPhoneAppMessages(method(:onMsg));
@@ -42,7 +43,7 @@ class CommExample extends App.AppBase
         
         sensor.setEnabledSensors([Sensor.SENSOR_HEARTRATE]);
         sensor.enableSensorEvents(method(:onHR));
-        
+                
         if(Toybox.System has :ServiceDelegate)
         {
         	candoBG = true;
@@ -73,12 +74,18 @@ class CommExample extends App.AppBase
     	if(s.find("ON") != null)
     	{
     		STATUS = "ON";
+    		if(candoBG == true)
+    		{
+    			Background.registerForTemporalEvent(new Time.Duration( (5 * 60) + 20));
+    			System.println("started temporal event");
+    		}
+        	
     	}
     	else if(s.find("OFF") != null)
     	{
     		STATUS = "OFF";
     	}
-    	else if(s.find("test") != null)
+    	else if(s.find("sync") != null)
     	{
     		test_history_send();
     	}
@@ -91,8 +98,10 @@ class CommExample extends App.AppBase
     function test_history_send()
     {
         var listener = new CommListener();
-		Comm.transmit(HR_arr, null, listener);
-
+		Comm.transmit(HR_hash, null, listener);
+		
+		eventsTriggered = 0;
+		Ui.requestUpdate();
     }
     
     
@@ -100,20 +109,40 @@ class CommExample extends App.AppBase
     function onHR(sensorInfo)
     {
     	HR = sensorInfo.heartRate;
-    	//HR_arr.add(HR);
+    	var curr_time = Time.now().value();
+    	HR_hash.put(curr_time, sensorInfo.heartRate);
+    	App.AppBase.setProperty("last_time", curr_time); // update last received time
     	Ui.requestUpdate();
     }
     
     function onBackgroundData(data)
     {
+    	// TODO : trigger code.
     	eventsTriggered++;
-    	HR_arr.addAll(data);
+    	concatHash(data);
+    	System.println(HR_hash);
     	Ui.requestUpdate();
     }
 
     // onStart() is called on application start up
     function onStart(state) 
     {
+    	// todo check current day over previous day
+    	// if compare today and current day >  1 day
+    	// 		set current day = today
+    	//		set data = {}
+    	
+    	
+    }
+    
+    function concatHash(hash)
+    {
+    	var keys = hash.keys();
+		for(var i = 0; i < keys.size(); i++)
+		{
+			var key = keys[i];
+			HR_hash.put(key, hash.get(key));
+		}
     }
 
     // onStop() is called when your application is exiting
@@ -127,27 +156,5 @@ class CommExample extends App.AppBase
         return [new CommView(), new CommInputDelegate()];
     }
 
-    function onMail(mailIter) 
-    {
-        var mail;
-
-        mail = mailIter.next();
-
-        while(mail != null) 
-        {
-            var i;
-            for(i = (stringsSize - 1); i > 0; i -= 1) 
-            {
-                strings[i] = strings[i-1];
-            }
-            strings[0] = mail.toString();
-            page = 1;
-            mail = mailIter.next();
-        }
-
-        Comm.emptyMailbox();
-        Ui.requestUpdate();
-    }
-
-  
+ 
 }

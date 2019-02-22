@@ -19,8 +19,7 @@ class CommListener extends Comm.ConnectionListener
     function onComplete() 
     {
         Sys.println("Transmit Complete");
-        
-        HR_arr = [];
+        HR_hash = {};
     }
 
     function onError() 
@@ -39,6 +38,8 @@ class CommInputDelegate extends Ui.BehaviorDelegate
 
     function onMenu() 
     {
+    	// TODO : change time duration for temporal here
+    
         var menu = new Ui.Menu();
         var delegate;
 
@@ -61,6 +62,7 @@ class CommInputDelegate extends Ui.BehaviorDelegate
         }
         Ui.requestUpdate();
     }
+    
 }
 
 class BaseMenuDelegate extends Ui.MenuInputDelegate 

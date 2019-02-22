@@ -1,10 +1,11 @@
 using Toybox.Background;
 using Toybox.Communications;
 using Toybox.System;
+using Toybox.Time;
 
 using Toybox.ActivityMonitor;
 using Toybox.Lang;
-
+using Toybox.Application as App;
 
 (:background)
 class TemporalHandler extends System.ServiceDelegate 
@@ -16,33 +17,68 @@ class TemporalHandler extends System.ServiceDelegate
     function initialize() {
         ServiceDelegate.initialize();
         
-        
     }
     
     function onTemporalEvent() 
     {
-    	var prev = Background.getBackgroundData;
+    	System.println("Starting Background Service");
+    	var prev = Background.getBackgroundData();
+    	var dict = {};
+    	
+    	var last_time = App.AppBase.getProperty("last_time");
+    	System.println("last time = " + last_time);
+    	
+    	/*
+    	if(prev != null)
+    	{
+    		var prev_keys = prev.keys;
+    		for(var i = 0; i < prev_keys.size(); i++)
+    		{
+    			var key = prev_keys[i];
+    			dict.put(key, prev.get(key));
+    		}
+    	}
+    	else
+    	{
+    		// check for application data in storage
+    	}
+    	*/
         var sensorIter = ActivityMonitor.getHeartRateHistory(null, false);
-        var array = [];
-        var previous = sensorIter.next();
-        
-        while (true) 
+        if(null == sensorIter)
         {
-		    var sample = sensorIter.next();
-		    if (null != sample)
-		    {                                           // null check
-		        if (sample.heartRate != ActivityMonitor.INVALID_HR_SAMPLE    // check for invalid samples
-		            && previous.heartRate
-		            != ActivityMonitor.INVALID_HR_SAMPLE) {
-		                //lastSampleTime = sample.when;
-		                System.println("Previous: " + previous.heartRate);  // print the previous sample
-		                System.println("Sample: " + sample.heartRate);      // print the current sample
-		                array.add(sample.heartRate);
-		        }
-		    }
-		}
+        	System.println("Error");
+        	Background.exit(prev);
+        }
         
-        Background.exit(array);
+
+        var count = 1;
+        var sample = sensorIter.next();
+
+        while(sample != null)
+        {
+	        if (sample.heartRate != ActivityMonitor.INVALID_HR_SAMPLE) 
+			{
+				// putting time and hr value into dictionary
+				var when = sample.when.value();
+		        dict.put(when, sample.heartRate);
+		        System.println("added to array");
+	        	count++;
+	        	sample = sensorIter.next();
+			}
+			else
+			{
+				System.println("error");
+				break;
+			}
+	        
+        	
+        }
+        System.println("Number of data points received = " + count);
+        System.println(dict);
+        
+        System.println("Trying to exit");
+        
+        Background.exit(dict);
         
     }
     
@@ -52,8 +88,5 @@ class TemporalHandler extends System.ServiceDelegate
 	    return Toybox.SensorHistory.getHeartRateHistory(options);
 	}
 	
-	
-	
-
-    
+ 
 }

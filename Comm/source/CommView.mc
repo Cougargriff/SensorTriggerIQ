@@ -28,7 +28,7 @@ class CommView extends Ui.View
         if(Sys.SCREEN_SHAPE_ROUND == screenShape) 
         {
             dc.drawText(dc.getWidth() / 2, 25,  Gfx.FONT_SMALL, "Communications", Gfx.TEXT_JUSTIFY_CENTER);
-            dc.drawText(dc.getWidth() / 2, 55, Gfx.FONT_SMALL, "Events : " + eventsTriggered, Gfx.TEXT_JUSTIFY_CENTER);
+            dc.drawText(dc.getWidth() / 2, 55, Gfx.FONT_SMALL, "Unsync Events: " + eventsTriggered, Gfx.TEXT_JUSTIFY_CENTER);
             dc.drawText(dc.getWidth() / 2, 80,  Gfx.FONT_TINY,  "Temporal Status : " + STATUS, Gfx.TEXT_JUSTIFY_CENTER);
            
             
