@@ -11,6 +11,7 @@ using Toybox.System as Sys;
 using Toybox.Sensor as sensor;
 using Toybox.Time;
 
+
 using Toybox.SensorHistory;
 using Toybox.Lang;
 
@@ -44,15 +45,16 @@ class CommExample extends App.AppBase
         sensor.setEnabledSensors([Sensor.SENSOR_HEARTRATE]);
         sensor.enableSensorEvents(method(:onHR));
                 
-        if(Toybox.System has :ServiceDelegate)
-        {
-        	candoBG = true;
-        	Background.registerForTemporalEvent(new Time.Duration( (5 * 60) + 20));
-        }
-        else
-        {
-  			Sys.println("** no background");
-  		}
+//        if(Toybox.System has :ServiceDelegate)
+//        {
+//        	candoBG = true;
+//        	Background.registerForTemporalEvent(new Time.Duration( (5 * 60) + 20));
+//        }
+//        else
+//        {
+//  			Sys.println("** no background");
+//  		} 
+//        ^^^^OUT OF MEMORY ERROR
         
     }
     
@@ -74,11 +76,11 @@ class CommExample extends App.AppBase
     	if(s.find("ON") != null)
     	{
     		STATUS = "ON";
-    		if(candoBG == true)
-    		{
-    			Background.registerForTemporalEvent(new Time.Duration( (5 * 60) + 20));
-    			System.println("started temporal event");
-    		}
+//    		if(candoBG == true)
+//    		{
+//    			Background.registerForTemporalEvent(new Time.Duration( (5 * 60) + 20));
+//    			System.println("started temporal event");
+//    		}
         	
     	}
     	else if(s.find("OFF") != null)
@@ -98,8 +100,37 @@ class CommExample extends App.AppBase
     function test_history_send()
     {
         var listener = new CommListener();
-		Comm.transmit(HR_hash, null, listener);
 		
+		var dict = {};
+		
+		var sensorIter = ActivityMonitor.getHeartRateHistory(null, false);
+		
+        var sample = sensorIter.next();
+
+        while(sample != null)
+        {
+	        if (sample.heartRate != ActivityMonitor.INVALID_HR_SAMPLE) 
+			{
+				// putting time and hr value into dictionary
+				var when = sample.when.value();
+		        dict.put(when, sample.heartRate);
+		      
+	 
+	        	sample = sensorIter.next();
+			}
+			else
+			{
+				System.println("error");
+				break;
+			}
+        }
+        
+        HR_hash = dict;
+        
+      
+      	Comm.transmit(HR_hash, null, listener);
+        
+        
 		eventsTriggered = 0;
 		Ui.requestUpdate();
     }
